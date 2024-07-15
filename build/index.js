@@ -11,36 +11,33 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const ethers_1 = require("ethers");
 const qs = require("qs");
-const ZeroXAPI = "8b0439f9-2233-45e7-bfb5-857bd1c43654";
+const ZeroXAPI = process.env.ZeroXAPI;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const JSON_RPC_ETH_PROVIDER = process.env.JSON_RPC_ETH_PROVIDER;
 const chainID = "1";
-const PRIVATE_KEY = "e375c1ad425a9ea467ddf0254f869ed19b7a3f98892fd230465f40d941331046";
-const PROVIDER_ETH = "https://cloudflare-eth.com/";
-const params = {
-    buyToken: "0x6B175474E89094C44Da98b954EedeAC495271d0F", //DAI
-    sellToken: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", //ETH
-    // Note that the DAI token uses 18 decimal places, so `buyAmount` is `100 * 10^18`.
-    buyAmount: "100",
-    takerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
-};
-const headers = {
-    "0x-api-key": ZeroXAPI,
-    "0x-chain-id": chainID,
-};
-function main() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const response = yield fetch(`https://api.0x.org/swap/v1/quote?${qs.stringify(params)}`, { headers });
-        const quote = yield response.json();
-        console.log(quote);
-        const provider = new ethers_1.ethers.JsonRpcProvider(PROVIDER_ETH);
-        const signer = new ethers_1.ethers.Wallet(PRIVATE_KEY, provider);
-        yield signer.sendTransaction({
-            gasLimit: quote.gas,
-            gasPrice: quote.gasPrice,
-            to: quote.to,
-            data: quote.data,
-            value: quote.value,
-            chainId: quote.chainId,
-        });
+const buyToken = (_a) => __awaiter(void 0, [_a], void 0, function* ({ chainID, ZeroXAPI, buyToken, buyAmount, takerAddress, private_key, json_rpc_provider, }) {
+    const eth_address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"; //ETH
+    const params = {
+        buyToken,
+        sellToken: eth_address,
+        buyAmount,
+        takerAddress,
+    };
+    const headers = {
+        "0x-api-key": ZeroXAPI,
+        "0x-chain-id": chainID,
+    };
+    const response = yield fetch(`https://api.0x.org/swap/v1/quote?${qs.stringify(params)}`, { headers });
+    const quote = yield response.json();
+    console.log(quote);
+    const provider = new ethers_1.ethers.JsonRpcProvider(json_rpc_provider);
+    const signer = new ethers_1.ethers.Wallet(private_key, provider);
+    yield signer.sendTransaction({
+        gasLimit: quote.gas,
+        gasPrice: quote.gasPrice,
+        to: quote.to,
+        data: quote.data,
+        value: quote.value,
+        chainId: quote.chainId,
     });
-}
-main();
+});
