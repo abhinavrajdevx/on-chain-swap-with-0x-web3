@@ -1,27 +1,42 @@
 import { ethers } from "ethers";
-
 const qs = require("qs");
 
-const ZeroXAPI = "8b0439f9-2233-45e7-bfb5-857bd1c43654";
+const ZeroXAPI: string | any = process.env.ZeroXAPI;
+const PRIVATE_KEY: string | any = process.env.PRIVATE_KEY;
+const JSON_RPC_ETH_PROVIDER: string | any = process.env.JSON_RPC_ETH_PROVIDER;
+
 const chainID = "1";
-const PRIVATE_KEY =
-  "e375c1ad425a9ea467ddf0254f869ed19b7a3f98892fd230465f40d941331046";
-const PROVIDER_ETH = "https://cloudflare-eth.com/";
 
-const params = {
-  buyToken: "0x6B175474E89094C44Da98b954EedeAC495271d0F", //DAI
-  sellToken: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", //ETH
-  // Note that the DAI token uses 18 decimal places, so `buyAmount` is `100 * 10^18`.
-  buyAmount: "100",
-  takerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
-};
+const buyToken = async ({
+  chainID,
+  ZeroXAPI,
+  buyToken,
+  buyAmount,
+  takerAddress,
+  private_key,
+  json_rpc_provider,
+}: {
+  chainID: string;
+  ZeroXAPI: string;
+  buyToken: string;
+  buyAmount: string;
+  takerAddress: string;
+  private_key: string;
+  json_rpc_provider: string;
+}) => {
+  const eth_address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"; //ETH
+  const params = {
+    buyToken,
+    sellToken: eth_address,
+    buyAmount,
+    takerAddress,
+  };
 
-const headers: Record<string, string> = {
-  "0x-api-key": ZeroXAPI,
-  "0x-chain-id": chainID,
-};
+  const headers: Record<string, string> = {
+    "0x-api-key": ZeroXAPI,
+    "0x-chain-id": chainID,
+  };
 
-async function main() {
   const response = await fetch(
     `https://api.0x.org/swap/v1/quote?${qs.stringify(params)}`,
     { headers }
@@ -30,8 +45,8 @@ async function main() {
   const quote = await response.json();
   console.log(quote);
 
-  const provider = new ethers.JsonRpcProvider(PROVIDER_ETH);
-  const signer = new ethers.Wallet(PRIVATE_KEY, provider);
+  const provider = new ethers.JsonRpcProvider(json_rpc_provider);
+  const signer = new ethers.Wallet(private_key, provider);
 
   await signer.sendTransaction({
     gasLimit: quote.gas,
@@ -41,6 +56,4 @@ async function main() {
     value: quote.value,
     chainId: quote.chainId,
   });
-}
-
-main();
+};
